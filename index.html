@@ -91,6 +91,25 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         }
 
+        .description-box {
+            display: none;
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #aa8935;
+            transition: all 0.3s ease;
+        }
+
+        .description-text {
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            font-size: 15px;
+        }
+
         .month-header {
             padding: 18px 22px;
             font-weight: bold;
@@ -199,16 +218,6 @@
             white-space: nowrap;
         }
 
-        .status {
-            color: #555;
-            font-weight: 500;
-        }
-
-        .price {
-            color: #333;
-            font-weight: 500;
-        }
-
         .book-btn {
             background: #aa8935;
             border: 1px solid #000;
@@ -252,6 +261,30 @@
         .date-range {
             font-weight: 500;
             color: #333;
+            white-space: nowrap;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
         }
 
         @media (max-width: 768px) {
@@ -330,6 +363,11 @@
             </div>
         </div>
 
+        <!-- Description Box -->
+        <div class="description-box" id="descriptionBox">
+            <p id="descriptionText" class="description-text"></p>
+        </div>
+
         <div class="step season-step">
             <h3>Select Season</h3>
             <div class="pill-group">
@@ -388,6 +426,13 @@
             }
         };
 
+        // Travel descriptions
+        const travelDescriptions = {
+            private: "2 people<br><br>Crafted for travelers seeking an exclusive, high-end experience, this option offers complete privacy, private transportation, and a dedicated guide.",
+            semiprivate: "4 people<br><br>Ideal for travelers who appreciate comfort and quality but are happy to share the journey with a few like-minded guests. This option provides shared transportation, and guided services in a very small group, ensuring a more intimate and relaxed experience than standard group tours.",
+            group: "Designed for sociable travelers, this option offers shared transportation and guided services. It is the most budget-friendly way to discover Uzbekistan while enjoying the camaraderie of fellow travelers."
+        };
+
         // 12 Days Package Prices (Extra KK 3 Days)
         const regularPrices = {
             private: { spring: 1200, summer: 1200, autumn: 1200 },
@@ -441,10 +486,10 @@
                     <div class="date-row" data-date-id="${date.id}">
                         <span class="date-range">${dateRange}</span>
                         <span class="regular-price">$${regularPrice}</span>
-                        <span class="status">Avail</span>
+                        <span class="status">Available</span>
                         <span class="sale-tag">20% OFF</span>
                         <span class="sale-price">$${salePrice}</span>
-                        <button class="book-btn" onclick="handleBookClick('${date.id}')">Book</button>
+                        <button class="book-btn" onclick="handleBookClick('${date.id}')">Book Now</button>
                     </div>
                 `;
                 }).join('')}
@@ -473,14 +518,21 @@
 
         function handleBookClick(dateId) {
             if (!selectedType || !selectedSeason) {
-                alert("Please select both travel option and season first.");
+                // Alert ki jagah visual feedback
+                if (!selectedType) {
+                    document.querySelector('.travel-step').style.border = '2px solid #ff0000';
+                    document.querySelector('.travel-step').style.borderRadius = '10px';
+                    document.querySelector('.travel-step').style.padding = '10px';
+                    setTimeout(() => {
+                        document.querySelector('.travel-step').style.border = '';
+                        document.querySelector('.travel-step').style.padding = '';
+                    }, 2000);
+                }
                 return;
             }
 
             const dateObj = seasonData[selectedSeason].dates.find(d => d.id === dateId);
             if (!dateObj) return;
-
-            const price = priceConfig[selectedType][selectedSeason];
 
             const regularPrice = regularPrices[selectedType][selectedSeason];
             const salePrice = salePrices[selectedType][selectedSeason];
@@ -520,12 +572,26 @@
                 document.querySelectorAll(".travel-step .pill").forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
                 selectedType = btn.dataset.type;
+
+                // Description show karo
+                const descriptionBox = document.getElementById('descriptionBox');
+                const descriptionText = document.getElementById('descriptionText');
+                descriptionText.innerHTML = travelDescriptions[selectedType];
+                descriptionBox.style.display = 'block';
+
                 if (selectedSeason) renderDates();
             };
         });
 
         document.querySelectorAll(".season-step .pill").forEach(btn => {
             btn.onclick = () => {
+                if (!selectedType) {
+                    // Alert ki jagah visual feedback
+                    btn.style.animation = 'shake 0.5s';
+                    setTimeout(() => btn.style.animation = '', 500);
+                    return;
+                }
+
                 document.querySelectorAll(".season-step .pill").forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
                 selectedSeason = btn.dataset.season;
@@ -572,8 +638,6 @@
 
         initPage();
     </script>
-
-
 </body>
 
 </html>
