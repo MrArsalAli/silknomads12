@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -343,15 +342,13 @@
                 align-items: center;
             }
 
-            .book-btn,
-            .show-more-btn {
+            .book-btn{
                 width: 100%;
                 max-width: 200px;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="tour-wrapper">
         <div class="step travel-step">
@@ -379,7 +376,6 @@
 
         <div class="dates-section"></div>
 
-        <button class="show-more-btn" id="showMoreBtn" style="display: none;">Show More Dates</button>
     </div>
 
     <script>
@@ -508,17 +504,11 @@
                 };
             });
 
-            const showMoreBtn = document.getElementById('showMoreBtn');
-            if (visibleMonths >= months.length) {
-                showMoreBtn.style.display = 'none';
-            } else {
-                showMoreBtn.style.display = 'block';
-            }
+
         }
 
         function handleBookClick(dateId) {
             if (!selectedType || !selectedSeason) {
-                // Alert ki jagah visual feedback
                 if (!selectedType) {
                     document.querySelector('.travel-step').style.border = '2px solid #ff0000';
                     document.querySelector('.travel-step').style.borderRadius = '10px';
@@ -534,38 +524,60 @@
             const dateObj = seasonData[selectedSeason].dates.find(d => d.id === dateId);
             if (!dateObj) return;
 
-            const regularPrice = regularPrices[selectedType][selectedSeason];
             const salePrice = salePrices[selectedType][selectedSeason];
 
-            const bookingData = {
-                tourType: selectedType,
-                season: selectedSeason,
-                date: dateObj.nextMonth
-                    ? `${dateObj.month} ${dateObj.start} – ${dateObj.nextMonth} ${dateObj.end}, ${dateObj.year}`
-                    : `${dateObj.month} ${dateObj.start} – ${dateObj.end}, ${dateObj.year}`,
-                regularPrice: regularPrice,
-                salePrice: salePrice,
-                dateId: dateObj.id
-            };
-            localStorage.setItem('tourBookingData', JSON.stringify(bookingData));
+            // 1. PAGE NAME
+            const pagePath = window.location.pathname;
+            const pageName = pagePath.split('/').pop();
 
+            // 2. START DATE (Direct from dateObj.start)
+            const startDay = parseInt(dateObj.start);
+            const startDate = new Date(2026, getMonthNumber(dateObj.month), startDay);
+
+            // 3. END DATE (Direct from dateObj.end)
+            const endDay = parseInt(dateObj.end);
+            const endDate = new Date(2026, getMonthNumber(dateObj.month), endDay);
+
+            // 4. FORMAT DATES
+            const formattedStart = formatDateToYYYYMMDD(startDate);
+            const formattedEnd = formatDateToYYYYMMDD(endDate);
+
+            // 5. DAYS COUNT 
+            const daysCount = 12;
+
+            // 6. REDIRECT URL
             const baseURL = 'https://www.silknomads.com/booking';
             const params = new URLSearchParams();
-            params.append('tourType', selectedType);
-            params.append('season', selectedSeason);
-            params.append('dateId', dateObj.id);
-            params.append('regularPrice', regularPrice);
-            params.append('salePrice', salePrice);
-            params.append('date', encodeURIComponent(bookingData.date));
+
+            params.append('page', pageName);
+            params.append('days', daysCount.toString());
+            params.append('start', formattedStart);
+            params.append('end', formattedEnd);
+            params.append('price', salePrice.toString());
 
             const redirectURL = `${baseURL}?${params.toString()}`;
+            console.log('Redirect URL:', redirectURL);
 
-            if (window.top !== window.self) {
-                window.top.location.href = redirectURL;
-            } else {
-                window.location.href = redirectURL;
-            }
+            // 7. REDIRECT
+            window.location.href = redirectURL;
         }
+
+        // Helper functions - Yeh wahi rahenge
+        function getMonthNumber(monthName) {
+            const months = {
+                "January": 0, "February": 1, "March": 2, "April": 3, "May": 4, "June": 5,
+                "July": 6, "August": 7, "September": 8, "October": 9, "November": 10, "December": 11
+            };
+            return months[monthName] || 2;
+        }
+
+        function formatDateToYYYYMMDD(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
 
         document.querySelectorAll(".travel-step .pill").forEach(btn => {
             btn.onclick = () => {
@@ -600,11 +612,6 @@
             };
         });
 
-        document.getElementById('showMoreBtn').onclick = () => {
-            const months = seasonData[selectedSeason].months;
-            visibleMonths = Math.min(visibleMonths + 3, months.length);
-            renderDates();
-        };
 
         function initPage() {
             renderDates();
@@ -624,20 +631,9 @@
             }
         }
 
-        window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'GET_BOOKING_DATA') {
-                const data = localStorage.getItem('tourBookingData');
-                if (data) {
-                    event.source.postMessage({
-                        type: 'BOOKING_DATA_RESPONSE',
-                        data: JSON.parse(data)
-                    }, event.origin);
-                }
-            }
-        });
+
 
         initPage();
     </script>
 </body>
-
 </html>
