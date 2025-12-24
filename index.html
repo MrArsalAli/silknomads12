@@ -527,8 +527,7 @@
             const salePrice = salePrices[selectedType][selectedSeason];
 
             // 1. PAGE NAME
-            const pagePath = window.location.pathname;
-            const pageName = pagePath.split('/').pop();
+            const pageName = "extended-uzbekistan-13-days";
 
             // 2. START DATE (Direct from dateObj.start)
             const startDay = parseInt(dateObj.start);
@@ -559,7 +558,11 @@
             console.log('Redirect URL:', redirectURL);
 
             // 7. REDIRECT
-            window.location.href = redirectURL;
+            if (window.top !== window.self) {
+                window.top.location.href = redirectURL;
+            } else {
+                window.location.href = redirectURL;
+            }
         }
 
         // Helper functions - Yeh wahi rahenge
