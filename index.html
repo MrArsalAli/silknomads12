@@ -543,15 +543,12 @@
             const formattedStart = formatDateToYYYYMMDD(startDate);
             const formattedEnd = formatDateToYYYYMMDD(endDate);
 
-            // 5. DAYS COUNT 
-            const daysCount = 10 + 3;
-
             // 6. REDIRECT URL
             const baseURL = 'https://www.silknomads.com/booking';
             const params = new URLSearchParams();
 
             params.append('page', pageName);
-            params.append('days', daysCount.toString());
+            params.append('days', "10 + 3");
             params.append('start', formattedStart);
             params.append('end', formattedEnd);
             params.append('price', salePrice.toString());
